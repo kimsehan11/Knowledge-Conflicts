@@ -1,0 +1,6 @@
+faiss-gpu-cu12
+sentence-transformers
+torch
+tqdm
+numpy
+langchain
