@@ -4,3 +4,5 @@ torch
 tqdm
 numpy
 langchain
+langchain_community
+pandas
