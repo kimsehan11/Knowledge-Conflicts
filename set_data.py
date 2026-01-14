@@ -25,5 +25,5 @@ for idx, data in enumerate(data_list):
     final_list.append(temp_json)
 
 
-with open("popqa_dataset/qa_dataset.json", 'w', encoding='utf-8') as f:
+with open("popqa_dataset/qa_dataset.json", 'w', encoding='utf-8') as f: 
     json.dump(final_list, f, ensure_ascii=False, indent=2)

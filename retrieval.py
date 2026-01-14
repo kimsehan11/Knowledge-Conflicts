@@ -8,9 +8,9 @@ from model import llm_load, llm_answer, llm_generate_list
 
 
 #벡터스토어 로드
-def load_vectorstore(vectordb_path="./vectorDB"):
-    print(f"벡터스토어 로드중")
+def load_vectorstore_retriever_embeddings(vectordb_path="./vectorDB"):
 
+    print("벡터스토어 로드 중")
     embeddings = HuggingFaceBgeEmbeddings(
         model_name="BAAI/bge-base-en",
         model_kwargs={"device": "cuda"},
@@ -23,14 +23,11 @@ def load_vectorstore(vectordb_path="./vectorDB"):
         allow_dangerous_deserialization=True
     )
 
-    return vectorstore, embeddings
-
-#검색기 로드
-def load_retriever(vectordb_path="./vectorDB"):
-
-    vectorstore, embeddings = load_vectorstore(vectordb_path)
+    print("검색기 로드 중")
     retriever = vectorstore.as_retriever(search_type="similarity", search_kwargs={"k":5})
-    return retriever
+    print("검색기 로드 완료")
+
+    return vectorstore, retriever, embeddings
 
 #쿼리 질문하기 - Score이랑 Debug (검색기 디버깅용 함수)
 def test_queries(vectorstore, queries, k=5,score=False,debug=False):
@@ -66,15 +63,17 @@ def test_queries(vectorstore, queries, k=5,score=False,debug=False):
 
 #Retrival Augmented Generation 구현
 def rag(vectorstore, query, llm, k=5):
-
+    print("RAG 실행 시작")
     RAG_PROMPT = PromptTemplate(
         template=RAG_PROMPT_TEMPLATE,
         input_variables=["context", "question"]
     )
 
+    print(f"vectorstore : {vectorstore}")
     docs = vectorstore.similarity_search(query, k=k)
     context = "\n\n".join([ f"[{i+1}] {doc.metadata.get('title', 'N/A')}\n{doc.page_content}"  for i, doc in enumerate(docs)])
     prompt = RAG_PROMPT.format(context=context, question=query)
+    print("LLM 응답 생성 시작")
     response = llm_answer(llm[0], llm[1], prompt)
     
     return {
