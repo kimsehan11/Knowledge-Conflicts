@@ -10,3 +10,4 @@ accelerate
 datasets
 mistral_inference
 bitsandbytes
+langchain-core
