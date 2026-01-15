@@ -10,7 +10,7 @@ def data_load():
 
 #모델 로드
 def llm_load():
-    model_id = "mistralai/Mistral-Nemo-Instruct-2407"
+    model_id = "./Mistral-Nemo-Instruct-2407"
     tokenizer = AutoTokenizer.from_pretrained(model_id, fix_mistral_regex=True)
 
     quantization_config = BitsAndBytesConfig(
@@ -29,7 +29,7 @@ def llm_answer(model, tokenizer, prompt):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     inputs = tokenizer(prompt, return_tensors="pt").to(device)
 
-    outputs = model.generate(**inputs, max_new_tokens=20, pad_token_id=tokenizer.eos_token_id)
+    outputs = model.generate(**inputs, max_new_tokens=40, pad_token_id=tokenizer.eos_token_id)
     
     # 입력 길이 이후부터만 디코딩 (프롬프트 제외)
     input_length = inputs["input_ids"].shape[1]
