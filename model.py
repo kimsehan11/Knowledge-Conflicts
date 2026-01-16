@@ -27,13 +27,20 @@ def llm_load():
 #모델 답변
 def llm_answer(model, tokenizer, prompt):
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    inputs = tokenizer(prompt, return_tensors="pt").to(device)
+    
+    # 입력 길이 제한 (너무 길면 truncate)
+    inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=2048).to(device)
 
-    outputs = model.generate(**inputs, max_new_tokens=40, pad_token_id=tokenizer.eos_token_id)
+    with torch.no_grad():  # gradient 계산 비활성화 (메모리 절약)
+        outputs = model.generate(**inputs, max_new_tokens=40, pad_token_id=tokenizer.eos_token_id)
     
     # 입력 길이 이후부터만 디코딩 (프롬프트 제외)
     input_length = inputs["input_ids"].shape[1]
     answer = tokenizer.decode(outputs[0][input_length:], skip_special_tokens=True)
+    
+    # 메모리 정리
+    del inputs, outputs
+    torch.cuda.empty_cache()
 
     return answer
 

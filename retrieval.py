@@ -1,10 +1,8 @@
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceBgeEmbeddings 
 from langchain_core.prompts import PromptTemplate
-from langchain_community.llms import HuggingFacePipeline
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline, BitsAndBytesConfig
 from prompt_template import RAG_PROMPT_TEMPLATE
-from model import llm_load, llm_answer, llm_generate_list
+from model import llm_answer
 
 
 #벡터스토어 로드
@@ -29,7 +27,6 @@ def load_vectorstore_retriever_embeddings(vectordb_path="./RAG/vectorDB"):
 
     return vectorstore, retriever, embeddings
 
-#쿼리 질문하기 - Score이랑 Debug (검색기 디버깅용 함수)
 def test_queries(vectorstore, queries, k=5,score=False,debug=False):
 
     if not score:
@@ -62,7 +59,7 @@ def test_queries(vectorstore, queries, k=5,score=False,debug=False):
                     print(f"-" * 80)
 
 #Retrival Augmented Generation 구현
-def rag(vectorstore, query, llm, k=5):
+def rag(vectorstore, query, llm, k=3):
     # print("RAG 실행 시작")
     RAG_PROMPT = PromptTemplate(
         template=RAG_PROMPT_TEMPLATE,
