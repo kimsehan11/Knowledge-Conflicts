@@ -10,7 +10,7 @@ from model import llm_answer
 
 load_dotenv()
 
-def search_serper(query, pages=3):
+def search_serper(query, pages=2):
     all_results = []
     for page in range(1, pages + 1):
         conn = http.client.HTTPSConnection("google.serper.dev")
@@ -46,7 +46,7 @@ def extract_paragraph(html, snippet):
             return sentence.strip() + '.'
     return snippet
 
-def get_accessible_results(query, target=10, pages=3):
+def get_accessible_results(query, target=10, pages=2):
     results = search_serper(query, pages)
     accessible = []
     for r in results:
