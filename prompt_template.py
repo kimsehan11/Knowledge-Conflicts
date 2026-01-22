@@ -9,3 +9,8 @@ Question: {question}
 
 Answer:"""
 
+#No RAG 프롬프트 템플릿
+NO_RAG_PROMPT_TEMPLATE = """Generate a document that provides accurate and relevant information to answer the given question.
+If the information is unclear or uncertain, explicitly state ’I don’t know’ to avoid any hallucinations.
+Question: {question}
+Answer:"""
