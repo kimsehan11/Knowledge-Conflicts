@@ -64,7 +64,7 @@ def web_rag(query, llm, target=10):
         input_variables=["context", "question"]
     )
 
-    docs = get_accessible_results(query, target=target, pages=3)
+    docs = get_accessible_results(query, target=target, pages=2)
     context = "\n\n".join([f"[{i+1}] {doc['title']}\n{doc['paragraph']}" for i, doc in enumerate(docs)])
     prompt = RAG_PROMPT.format(context=context, question=query)
     response = llm_answer(llm[0], llm[1], prompt)
