@@ -12,3 +12,5 @@ mistral_inference
 bitsandbytes
 langchain-core
 openai
+matplotlib
+seaborn
