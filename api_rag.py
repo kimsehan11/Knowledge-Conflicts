@@ -52,6 +52,8 @@ def get_accessible_results(query, target=10, pages=2):
     for r in results:
         if len(accessible) >= target:
             break
+        if "snippet" not in r:
+            continue
         success, html = is_accessible(r["link"])
         if success:
             r["paragraph"] = extract_paragraph(html, r["snippet"])
