@@ -1,6 +1,7 @@
 import json
 
 #결과 로드
+#output/output_with_base_rag.jsonl <- 이 결과 불러오는거임
 def load_results(filepath):
     results = []
     with open(filepath, "r", encoding="utf-8") as f:
@@ -8,7 +9,7 @@ def load_results(filepath):
             results.append(json.loads(line))
     return results
 
-#정확도 계산 (ground_truth 중 하나라도 answer에 포함되면 정답)
+#accuracy 계산 
 def calculate_accuracy(results):
     correct = 0
     for item in results:
@@ -18,7 +19,8 @@ def calculate_accuracy(results):
             correct += 1
     return correct / len(results) * 100 if results else 0
 
-#데이터셋별 정확도 계산 dataset_sizes: {"popqa": 260, "nq": 260, "triviaqa": 261, "bioasq": 261}
+#데이터셋별 accuracy 계산 
+#dataset_sizes: {"popqa": 260, "nq": 260, "triviaqa": 261, "bioasq": 261}
 def calculate_accuracy_by_dataset(results, dataset_sizes):
     accuracies = {}
     start = 0
@@ -30,7 +32,7 @@ def calculate_accuracy_by_dataset(results, dataset_sizes):
     return accuracies
 
 
-#검색 precision(정밀도) 계산 함수
+#precision 계산 함수
 def retrieval_precision(passages, gold_answers):
   
     if not passages:
@@ -42,7 +44,7 @@ def retrieval_precision(passages, gold_answers):
     )
     return count / len(passages)
 
-# 사용 예시 (RAG 결과에 source_documents가 있을 때)
+# 데이터셋별 precision 계산
 def calculate_precision_by_datasets(results, dataset_sizes):
     precision_dict = {}
     size = 0
@@ -69,3 +71,25 @@ def calculate_precision_by_datasets(results, dataset_sizes):
     precision_dict["overall"] = precision
     
     return precision_dict
+
+#austute rag 정확도 계산
+def calculate_accuracy_by_dataset_with_astute_rag(results,dataset_sizes,answers):
+    cur_line = 0 
+
+    acc_dict = {"popqa": 0, "nq": 0, "triviaqa": 0, "bioasq": 0}
+    
+    for key,value in dataset_sizes.items():
+        next_line = cur_line + value
+        for idx in range(cur_line, next_line):
+            result = results[idx]
+            
+            if any(str(res) in answers[idx] for res in result['ground_truth']):
+                acc_dict[key] += 1
+        cur_line = next_line
+    
+       
+    for key in acc_dict.keys():
+        acc_dict[key] = round(acc_dict[key] / dataset_sizes[key] * 100 , 1) 
+        
+    return acc_dict
+

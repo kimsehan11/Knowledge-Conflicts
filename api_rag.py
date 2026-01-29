@@ -10,7 +10,7 @@ from model import llm_answer
 
 load_dotenv()
 
-def search_serper(query, pages=2):
+def search_serper(query, pages=3):
     all_results = []
     for page in range(1, pages + 1):
         conn = http.client.HTTPSConnection("google.serper.dev")
@@ -46,7 +46,7 @@ def extract_paragraph(html, snippet):
             return sentence.strip() + '.'
     return snippet
 
-def get_accessible_results(query, target=10, pages=2):
+def get_accessible_results(query, target=10, pages=3):
     results = search_serper(query, pages)
     accessible = []
     for r in results:
@@ -66,7 +66,7 @@ def web_rag(query, llm, target=10):
         input_variables=["context", "question"]
     )
 
-    docs = get_accessible_results(query, target=target, pages=2)
+    docs = get_accessible_results(query, target=target, pages=3)
     context = "\n\n".join([f"[{i+1}] {doc['title']}\n{doc['paragraph']}" for i, doc in enumerate(docs)])
     prompt = RAG_PROMPT.format(context=context, question=query)
     response = llm_answer(llm[0], llm[1], prompt)

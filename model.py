@@ -34,8 +34,9 @@ def llm_answer(model, tokenizer, prompt):
     outputs = model.generate(
         **inputs,
         max_new_tokens=1024,  
-        do_sample=False,     
-        pad_token_id=tokenizer.eos_token_id
+        do_sample=True,     
+        pad_token_id=tokenizer.eos_token_id,
+        temperature=0
     )
 
     answer = tokenizer.decode(outputs[0][input_length:], skip_special_tokens=True)
