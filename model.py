@@ -1,7 +1,7 @@
 import torch
 import json
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-
+import genai
 #데이터 로드
 def data_load():
     with open("total_qa_sampled/qa_dataset.json", "r") as f:
@@ -23,6 +23,19 @@ def llm_load():
     model = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=quantization_config).to(device) 
 
     return model, tokenizer
+
+#모델 로드(제미나이)
+def llm_load_gemini():
+    client = genai.Client()
+    return client
+
+#모델 답변(제미나이)
+def llm_answer_gemini(client, prompt, model="gemini-2.0-flash"):
+    response = client.models.generate_content(
+        model=model,
+        contents=prompt
+    )
+    return response.text
 
 #모델 답변
 def llm_answer(model, tokenizer, prompt):
