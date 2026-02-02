@@ -29,7 +29,7 @@ each captures the unique perspective or data.
 For each new document created, clearly indicate:
 * Whether the source was from memory or an external retrieval.
 * The original document numbers for transparency.
-Initial Context: {context}
+Initial Context: {context_init}
 Last Context: {context}
 Question: {question}
 New Context:
