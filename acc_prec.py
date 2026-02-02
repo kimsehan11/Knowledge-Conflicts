@@ -83,7 +83,8 @@ def calculate_accuracy_by_dataset_with_astute_rag(results,dataset_sizes,answers)
         for idx in range(cur_line, next_line):
             result = results[idx]
             
-            if any(str(res) in answers[idx] for res in result['ground_truth']):
+            # 대소문자 무시하여 비교 (.lower() 추가)
+            if any(str(res).lower() in answers[idx].lower() for res in result['ground_truth']):
                 acc_dict[key] += 1
         cur_line = next_line
     
