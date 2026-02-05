@@ -1,7 +1,7 @@
 import torch
 import json
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-import genai
+from google import genai
 #데이터 로드
 def data_load():
     with open("total_qa_sampled/qa_dataset.json", "r") as f:
@@ -30,7 +30,7 @@ def llm_load_gemini():
     return client
 
 #모델 답변(제미나이)
-def llm_answer_gemini(client, prompt, model="gemini-2.0-flash"):
+def llm_answer_gemini(client, prompt, model="gemini-2.5-flash-lite"):
     response = client.models.generate_content(
         model=model,
         contents=prompt
@@ -59,32 +59,51 @@ def llm_answer(model, tokenizer, prompt):
 
     return answer
 
-#모델 답변 리스트 생성
-def llm_generate_list(model, tokenizer, qa_dataset):
-    internal_pessages = []
-    for idx,qa in enumerate(qa_dataset):
-        prompt = f"""
-        Generate a document that provides accurate and relevant information to answer the given question.
-        If the information is unclear or uncertain, explicitly state ’I don’t know’ to avoid any hallucinations.
-        Question: {qa["question"]} Document
-        """
-        internal_pessage = { "ids" : qa["ids"], "question": qa["question"] , "model_answer": llm_answer(model, tokenizer, prompt)}
-        internal_pessages.append(internal_pessage)
-        if idx < 10:
-            print(internal_pessage)
-            print()
-    return internal_pessages
-
-#모델 병합 (internal_pessages 와 external_pessages 병합) 아직 미완성 
-def combine_pessages(internal_pessages,external_pessages):
-    combined_pessages = []
-    for internal_pessage, external_pessage in zip(internal_pessages, external_pessages):
-        combined_pessage = {
-            "ids": internal_pessage["ids"],
-            "question": internal_pessage["question"],
-            "combined_answer" : external_pessage[""] + " " + internal_pessage["answer"]
-        }
-        combined_pessages.append(combined_pessage)
+#모델 답변 (배치 처리)
+def llm_answer_batch(model, tokenizer, prompts, batch_size=4):
+    """여러 프롬프트를 배치로 처리하여 속도 향상"""
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    answers = []
     
-    print(combined_pessages[:5] + "\n")
-    return combined_pessages
+    # pad_token 설정
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+
+    # padding_side를 tokenizer 속성으로 설정
+    original_padding_side = tokenizer.padding_side
+    tokenizer.padding_side = 'left'
+    
+    for i in range(0, len(prompts), batch_size):
+        batch_prompts = prompts[i:i+batch_size]
+        
+        inputs = tokenizer(
+            batch_prompts, 
+            return_tensors="pt", 
+            truncation=True, 
+            max_length=4096, 
+            padding=True,
+            padding_side='left'
+        ).to(device)
+        
+        # 각 입력의 실제 길이 저장 (패딩 제외)
+        input_lengths = (inputs["input_ids"] != tokenizer.pad_token_id).sum(dim=1).tolist()
+        
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=1024,
+            do_sample=False,
+            pad_token_id=tokenizer.eos_token_id,
+        )
+        
+        for j, output in enumerate(outputs):
+            answer = tokenizer.decode(output[input_lengths[j]:], skip_special_tokens=True)
+            answers.append(answer)
+        
+        del inputs, outputs
+        torch.cuda.empty_cache()
+
+    # padding_side 원복
+    tokenizer.padding_side = original_padding_side
+    
+    return answers
+
