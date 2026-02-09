@@ -30,7 +30,7 @@ def llm_load_gemini():
     return client
 
 #모델 답변(제미나이)
-def llm_answer_gemini(client, prompt, model="gemini-2.5-flash-lite"):
+def llm_answer_gemini(client, prompt, model="gemini-2.5-flash-lite"): #gemini-3-flash-preview #gemini-2.5-flash
     response = client.models.generate_content(
         model=model,
         contents=prompt
@@ -61,7 +61,6 @@ def llm_answer(model, tokenizer, prompt):
 
 #모델 답변 (배치 처리)
 def llm_answer_batch(model, tokenizer, prompts, batch_size=4):
-    """여러 프롬프트를 배치로 처리하여 속도 향상"""
     device = "cuda" if torch.cuda.is_available() else "cpu"
     answers = []
     

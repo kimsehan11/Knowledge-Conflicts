@@ -6,7 +6,7 @@ import requests
 from bs4 import BeautifulSoup
 from prompt_template import RAG_PROMPT_TEMPLATE
 from langchain_core.prompts import PromptTemplate 
-from model import llm_answer, llm_answer_gemini
+from model import llm_answer, llm_answer_gemini 
 
 load_dotenv()
 
