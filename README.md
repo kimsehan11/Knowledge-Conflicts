@@ -45,48 +45,7 @@ Knowledge-Conflicts/
 | TriviaQA | 트리비아 질문 |
 | BioASQ | 생의학 QA |
 
-## 설치
 
-```bash
-# 의존성 설치
-pip install -r requirements.txt
-
-# 환경 변수 설정 (.env 파일 생성)
-SERPER_API_KEY=your_serper_api_key
-GOOGLE_API_KEY=your_google_api_key  # Gemini 사용 시
-```
-
-## 주요 기능
-
-### 1. 기본 RAG
-```python
-from api_rag import web_rag
-from model import llm_load
-
-llm = llm_load()
-result = web_rag("What is the capital of France?", llm)
-```
-
-### 2. ASTUTE RAG
-내부 지식 생성 → 외부 문서 검색 → 지식 통합 → 답변 생성
-
-```python
-from astute_rag import make_internal_passage, combine_passage, finalize_answer
-```
-
-### 3. 평가
-```python
-from acc_prec import calculate_accuracy_by_dataset, calculate_precision_by_datasets
-
-# 정확도 계산
-dataset_sizes = {"popqa": 260, "nq": 260, "triviaqa": 261, "bioasq": 261}
-accuracies = calculate_accuracy_by_dataset(results, dataset_sizes)
-```
-
-## 평가 지표
-
-- **Accuracy**: 모델 응답이 정답을 포함하는 비율
-- **Retrieval Precision**: 검색된 문서 중 정답을 포함하는 문서의 비율
 
 ## 참고 문헌
 
