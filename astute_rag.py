@@ -1,7 +1,7 @@
 from langchain_core.prompts import PromptTemplate
 from tqdm import tqdm
 from model import llm_answer, llm_answer_batch
-from prompt_template import P_ANS
+from prompt_template import P_ANS, P_CON
 import re
 import json
 
@@ -10,7 +10,7 @@ def make_prompt_template(template, input_vars):
     return PromptTemplate(template=template, input_variables=input_vars)
 
 #external passage 리스트 생성 함수
-def make_external_passage(filepath="output/output_with_base_api_rag_2.jsonl"):
+def make_external_passage(filepath="output/output_with_base_api_rag.jsonl"):
     E = []
 
     with open(filepath,"r") as f:
@@ -94,6 +94,22 @@ def make_passage_source(combine_passages):
         passage_sources.append(passage_source)
 
     return passage_sources
+
+#그룹핑 진행하는 함수 (t >= 2: iterative consolidation)
+def consolidate_passages(llm, question, context_init, t=2, P_con=None):
+    if P_con is None:
+        P_con = make_prompt_template(P_CON, ["question", "context_init", "context"])
+    
+    context = None
+    for i in range(t-1):
+        P_con_prompt = P_con.format(
+            question=question,
+            context_init=context_init,
+            context=context
+        )
+        context = llm_answer(llm[0], llm[1], P_con_prompt)
+    
+    return context
 
 #최종 답변 생성 함수
 def finalize_answer(llm, question, context_init, context=None,P_ans=make_prompt_template(P_ANS,["question", "context_init","context"])):
