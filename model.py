@@ -11,7 +11,7 @@ def data_load():
 #모델 로드
 def llm_load():
     model_id = "./Mistral-Nemo-Instruct-2407"
-    tokenizer = AutoTokenizer.from_pretrained(model_id, fix_mistral_regex=True)
+    tokenizer = AutoTokenizer.from_pretrained(model_id)
 
     quantization_config = BitsAndBytesConfig(
         load_in_4bit=True,
