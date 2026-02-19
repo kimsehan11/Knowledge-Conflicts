@@ -1,5 +1,6 @@
 import torch
 import json
+import time
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from google import genai
 #데이터 로드
@@ -100,6 +101,9 @@ def llm_answer_batch(model, tokenizer, prompts, batch_size=4):
         
         del inputs, outputs
         torch.cuda.empty_cache()
+        
+        # 배치 사이 짧은 대기로 GPU 온도/전력 안정화
+        time.sleep(0.5)
 
     # padding_side 원복
     tokenizer.padding_side = original_padding_side
