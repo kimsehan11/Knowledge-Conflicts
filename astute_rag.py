@@ -4,7 +4,10 @@ from model import llm_answer, llm_answer_batch
 from prompt_template import P_ANS, P_CON
 import re
 import json
-
+import gc
+import os
+import torch
+import time
 
 def make_prompt_template(template, input_vars):
     return PromptTemplate(template=template, input_variables=input_vars)
@@ -110,6 +113,59 @@ def consolidate_passages(llm, question, context_init, t=2, P_con=None):
         context = llm_answer(llm[0], llm[1], P_con_prompt)
     
     return context
+
+#그룹핑 진행하는 함수 - 배치 버전 (메모리 관리 + 체크포인트)
+def consolidate_passages_batch(llm, questions, contexts, t=2, P_con=None, 
+                                checkpoint_path="./output/consolidation_checkpoint.json",
+                                checkpoint_interval=50):
+ 
+    
+    if P_con is None:
+        P_con = make_prompt_template(P_CON, ["question", "context_init", "context"])
+    
+    # 체크포인트에서 이어서 시작
+    start_idx = 0
+    consolidated_contexts = []
+    if os.path.exists(checkpoint_path):
+        with open(checkpoint_path, "r", encoding="utf-8") as f:
+            checkpoint = json.load(f)
+            consolidated_contexts = checkpoint.get("results", [])
+            start_idx = len(consolidated_contexts)
+            print(f"체크포인트에서 복원: {start_idx}개 완료, 이어서 진행합니다.")
+    
+    for idx in tqdm(range(start_idx, len(questions)), desc="consolidating passages"):
+        question = questions[idx]
+        context_init = contexts[idx]
+        
+        context = None
+        for i in range(t - 1):
+            P_con_prompt = P_con.format(
+                question=question,
+                context_init=context_init,
+                context=context
+            )
+            context = llm_answer(llm[0], llm[1], P_con_prompt)
+        
+        consolidated_contexts.append(context)
+        
+        # 주기적 메모리 정리 + 체크포인트 저장
+        if (idx + 1) % checkpoint_interval == 0:
+            gc.collect()
+            torch.cuda.empty_cache()
+            time.sleep(1)  # GPU 쿨다운
+            with open(checkpoint_path, "w", encoding="utf-8") as f:
+                json.dump({"results": consolidated_contexts}, f, ensure_ascii=False)
+            print(f"  [체크포인트 저장: {idx + 1}/{len(questions)}]")
+        elif (idx + 1) % 10 == 0:
+            # 10개마다 간단한 메모리 정리
+            torch.cuda.empty_cache()
+            time.sleep(0.3)
+    
+    # 최종 저장
+    with open(checkpoint_path, "w", encoding="utf-8") as f:
+        json.dump({"results": consolidated_contexts}, f, ensure_ascii=False)
+    
+    return consolidated_contexts
 
 #최종 답변 생성 함수
 def finalize_answer(llm, question, context_init, context=None,P_ans=make_prompt_template(P_ANS,["question", "context_init","context"])):
