@@ -48,14 +48,18 @@ def make_internal_passage_batch(q, P_gen, M, batch_size=4):
     return I
 
 #최종 답변 생성 함수 (배치 버전)
-def finalize_answer_batch(llm, questions, contexts, batch_size=4, P_ans=None):
+def finalize_answer_batch(llm, questions, contexts, batch_size=4, P_ans=None, consolidated_contexts=None):
     if P_ans is None:
         P_ans = make_prompt_template(P_ANS, ["question", "context_init", "context"])
     
+    # consolidated_contexts가 없으면 t=1 (consolidation 없음)
+    if consolidated_contexts is None:
+        consolidated_contexts = [None] * len(questions)
+    
     # 모든 프롬프트 미리 생성
     prompts = [
-        P_ans.format(question=q, context_init=ctx, context=None) 
-        for q, ctx in zip(questions, contexts)
+        P_ans.format(question=q, context_init=ctx, context=con_ctx) 
+        for q, ctx, con_ctx in zip(questions, contexts, consolidated_contexts)
     ]
     
     # 배치로 처리
