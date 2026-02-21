@@ -3,6 +3,7 @@ import json
 import time
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from google import genai
+from openai import OpenAI
 #데이터 로드
 def data_load():
     with open("total_qa_sampled/qa_dataset.json", "r") as f:
@@ -24,6 +25,20 @@ def llm_load():
     model = AutoModelForCausalLM.from_pretrained(model_id, quantization_config=quantization_config).to(device) 
 
     return model, tokenizer
+
+#모델 로드(GPT)
+def llm_load_gpt():
+    client = OpenAI()
+    return client
+
+#모델 답변(GPT)
+def llm_answer_gpt(client, prompt, model="gpt-4.1-mini"):
+    print("Generating answer using GPT model...")
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    return response.choices[0].message.content
 
 #모델 로드(제미나이)
 def llm_load_gemini():
